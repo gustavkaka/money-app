@@ -1,6 +1,15 @@
 {\rtf1\ansi\ansicpg932\cocoartf2822
-\cocoatextscaling0\cocoaplatform0{\fonttbl}
+\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fswiss\fcharset0 Helvetica;}
 {\colortbl;\red255\green255\blue255;}
 {\*\expandedcolortbl;;}
 \paperw11900\paperh16840\margl1440\margr1440\vieww11520\viewh8400\viewkind0
-}
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural\partightenfactor0
+
+\f0\fs24 \cf0 // \uc0\u12450 \u12503 \u12522 \u12392 \u12375 \u12390 Chrome\u12395 \u35469 \u35672 \u12373 \u12379 \u12427 \u12383 \u12417 \u12398 \u26368 \u23567 \u38480 \u12398 \u35373 \u23450 \
+self.addEventListener('install', (event) => \{\
+  self.skipWaiting();\
+\});\
+\
+self.addEventListener('fetch', (event) => \{\
+  event.respondWith(fetch(event.request));\
+\});}
