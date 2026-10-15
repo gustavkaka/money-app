@@ -6,9 +6,12 @@
 \pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\tx9680\pardirnatural\partightenfactor0
 
 \f0\fs24 \cf0 \{\
+  "id": "money-app-pwa",\
   "name": "\uc0\u12362 \u36001 \u24067 \u12510 \u12493 \u12540 ",\
   "short_name": "\uc0\u12362 \u36001 \u24067 ",\
+  "description": "\uc0\u12471 \u12531 \u12503 \u12523 \u12391 \u20351 \u12356 \u12420 \u12377 \u12356 \u28422 \u40658 \u12487 \u12470 \u12452 \u12531 \u12398 \u12362 \u36001 \u24067 \u12539 \u25152 \u25345 \u37329 \u31649 \u29702 \u12450 \u12503 \u12522 ",\
   "start_url": "./index.html",\
+  "scope": "./",\
   "display": "standalone",\
   "background_color": "#0b0b0c",\
   "theme_color": "#0b0b0c",\
@@ -16,12 +19,14 @@
     \{\
       "src": "https://via.placeholder.com/192/0b0b0c/ffffff?text=Wallet",\
       "sizes": "192x192",\
-      "type": "image/png"\
+      "type": "image/png",\
+      "purpose": "any maskable"\
     \},\
     \{\
       "src": "https://via.placeholder.com/512/0b0b0c/ffffff?text=Wallet",\
       "sizes": "512x512",\
-      "type": "image/png"\
+      "type": "image/png",\
+      "purpose": "any maskable"\
     \}\
   ]\
 \}}
