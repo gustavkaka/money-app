@@ -321,6 +321,9 @@
   </nav>
 
   <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js');
+    }
     // データの保持用
     let balance = 0;
     let historyData = [];
