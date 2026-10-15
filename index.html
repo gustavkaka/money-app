@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>お財布マネー - 漆黒</title>
+  <style>
+    :root {
+      --bg-color: #0b0b0c;
+      --card-bg: #141416;
+      --border-color: #232326;
+      --text-main: #ffffff;
+      --text-sub: #8a8a93;
+      --accent-minus: #ff3b30;
+      --accent-plus: #007aff;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* メインコンテンツエリア */
+    .content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 24px 16px;
+      padding-bottom: 90px; /* ナビ被り防止 */
+    }
+
+    .page {
+      display: none;
+    }
+
+    .page.active {
+      display: block;
+    }
+
+    /* 削ぎ落とした残高カード（グラス調） */
+    .balance-card {
+      background: linear-gradient(135deg, #18181b, #111112);
+      border: 1px solid var(--border-color);
+      padding: 32px 20px;
+      border-radius: 18px;
+      margin-bottom: 24px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .balance-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: radial-gradient(circle at top left, rgba(255,255,255,0.03), transparent);
+      pointer-events: none;
+    }
+
+    .balance-label {
+      font-size: 13px;
+      color: var(--text-sub);
+      letter-spacing: 0.05em;
+      margin-bottom: 8px;
+    }
+
+    .balance-amount {
+      font-size: 38px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    /* フォームカード */
+    .form-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      padding: 20px 16px;
+      border-radius: 14px;
+      margin-bottom: 16px;
+    }
+
+    .form-card h3 {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-sub);
+      margin-bottom: 16px;
+      letter-spacing: 0.03em;
+    }
+
+    .input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .input-row {
+      display: flex;
+      gap: 10px;
+    }
+
+    input {
+      background-color: #0b0b0c;
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      padding: 14px;
+      border-radius: 8px;
+      font-size: 15px;
+      outline: none;
+      width: 100%;
+      transition: border-color 0.2s ease;
+    }
+
+    input::placeholder {
+      color: #4a4a4f;
+    }
+
+    input:focus {
+      border-color: #444;
+    }
+
+    /* ボタン（引き算の美学、塗りではなく枠線と微細な色で表現） */
+    button {
+      padding: 14px;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+    }
+
+    .btn-spend {
+      background-color: transparent;
+      border-color: rgba(255, 59, 48, 0.3);
+      color: #ff453a;
+    }
+
+    .btn-spend:active {
+      background-color: rgba(255, 59, 48, 0.05);
+    }
+
+    .btn-charge {
+      background-color: transparent;
+      border-color: rgba(0, 122, 255, 0.3);
+      color: #0a84ff;
+    }
+
+    .btn-charge:active {
+      background-color: rgba(0, 122, 255, 0.05);
+    }
+
+    /* 履歴リスト */
+    .history-list {
+      list-style: none;
+    }
+
+    .history-item {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      padding: 16px;
+      border-radius: 12px;
+      margin-bottom: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .history-item .title {
+      font-weight: 500;
+      font-size: 15px;
+      margin-bottom: 4px;
+    }
+
+    .history-item .date {
+      font-size: 11px;
+      color: var(--text-sub);
+    }
+
+    .history-item .amount {
+      font-weight: 600;
+      font-size: 16px;
+    }
+
+    .amount.minus { color: var(--accent-minus); }
+    .amount.plus { color: var(--accent-plus); }
+
+    /* 下部ナビゲーション */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      height: 72px;
+      background: rgba(11, 11, 12, 0.95);
+      backdrop-filter: blur(8px);
+      display: flex;
+      border-top: 1px solid var(--border-color);
+      padding-bottom: 12px; /* iOS等のバー対策 */
+    }
+
+    .nav-item {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      font-size: 11px;
+      color: var(--text-sub);
+      background: none;
+      border: none;
+      cursor: pointer;
+      gap: 4px;
+    }
+
+    .nav-item.active {
+      color: var(--text-main);
+    }
+
+    .nav-icon {
+      width: 20px;
+      height: 20px;
+      stroke: currentColor;
+      fill: none;
+    }
+
+    /* 小さめのヘッダー */
+    .section-title {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 20px;
+      letter-spacing: 0.03em;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="content">
+    <!-- 1ページ目：メイン画面 -->
+    <div id="page-home" class="page active">
+      <div class="balance-card">
+        <div class="balance-label">現在の所持金</div>
+        <div class="balance-amount" id="balance-display">¥0</div>
+      </div>
+
+      <!-- 出費入力 -->
+      <div class="form-card">
+        <h3>💸 お金を使った</h3>
+        <div class="input-group">
+          <input type="text" id="spend-title" placeholder="何に使いましたか？ (例: ランチ)" autocomplete="off">
+          <div class="input-row">
+            <input type="number" id="spend-amount" placeholder="金額 (¥)" inputmode="numeric">
+            <button class="btn-spend" onclick="addExpense()">
+              <!-- マイナスSVGアイコン -->
+              <svg class="nav-icon" viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+              使った！
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- チャージ入力 -->
+      <div class="form-card">
+        <h3>💰 お金を追加</h3>
+        <div class="input-group">
+          <div class="input-row">
+            <input type="number" id="charge-amount" placeholder="金額 (¥)" inputmode="numeric">
+            <button class="btn-charge" onclick="addCharge()">
+              <!-- プラスSVGアイコン -->
+              <svg class="nav-icon" viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+              追加！
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2ページ目：履歴画面 -->
+    <div id="page-history" class="page">
+      <h2 class="section-title">利用履歴</h2>
+      <ul class="history-list" id="history-container">
+        <!-- JSで挿入 -->
+      </ul>
+    </div>
+  </div>
+
+  <!-- 下部ナビゲーション -->
+  <nav class="bottom-nav">
+    <button class="nav-item active" id="nav-home" onclick="switchPage('home')">
+      <!-- 🏠 SVG -->
+      <svg class="nav-icon" viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+        <polyline points="9 22 9 12 15 12 15 22"></polyline>
+      </svg>
+      ホーム
+    </button>
+    <button class="nav-item" id="nav-history" onclick="switchPage('history')">
+      <!-- 📜 SVG -->
+      <svg class="nav-icon" viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+        <polyline points="14 2 14 8 20 8"></polyline>
+        <line x1="16" y1="13" x2="8" y2="13"></line>
+        <line x1="16" y1="17" x2="8" y2="17"></line>
+        <polyline points="10 9 9 9 8 9"></polyline>
+      </svg>
+      履歴
+    </button>
+  </nav>
+
+  <script>
+    // データの保持用
+    let balance = 0;
+    let historyData = [];
+
+    // 起動時にデータを読み込む
+    window.onload = function() {
+      const savedBalance = localStorage.getItem('my_balance');
+      const savedHistory = localStorage.getItem('my_history');
+
+      if (savedBalance !== null) balance = parseInt(savedBalance, 10);
+      if (savedHistory !== null) historyData = JSON.parse(savedHistory);
+
+      updateUI();
+    };
+
+    // 画面切り替え処理
+    function switchPage(pageName) {
+      document.getElementById('page-home').classList.remove('active');
+      document.getElementById('page-history').classList.remove('active');
+      document.getElementById('nav-home').classList.remove('active');
+      document.getElementById('nav-history').classList.remove('active');
+
+      if (pageName === 'home') {
+        document.getElementById('page-home').classList.add('active');
+        document.getElementById('nav-home').classList.add('active');
+      } else {
+        document.getElementById('page-history').classList.add('active');
+        document.getElementById('nav-history').classList.add('active');
+      }
+    }
+
+    // データを保存して表示を更新する
+    function saveData() {
+      localStorage.setItem('my_balance', balance);
+      localStorage.setItem('my_history', JSON.stringify(historyData));
+      updateUI();
+    }
+
+    // 表示の更新（DOM操作）
+    function updateUI() {
+      // 残高更新
+      document.getElementById('balance-display').textContent = '¥' + balance.toLocaleString();
+
+      // 履歴一覧更新
+      const container = document.getElementById('history-container');
+      container.innerHTML = '';
+
+      if (historyData.length === 0) {
+        container.innerHTML = '<li style="text-align:center; color:var(--text-sub); padding:32px 0; font-size: 13px;">履歴はありません</li>';
+        return;
+      }
+
+      // 新しい順に表示
+      historyData.slice().reverse().forEach(item => {
+        const li = document.createElement('li');
+        li.className = 'history-item';
+        
+        const isPlus = item.type === 'charge';
+        const sign = isPlus ? '+' : '-';
+        const amountClass = isPlus ? 'plus' : 'minus';
+
+        li.innerHTML = `
+          <div>
+            <div class="title">${item.title}</div>
+            <div class="date">${item.date}</div>
+          </div>
+          <div class="amount ${amountClass}">${sign}¥${item.amount.toLocaleString()}</div>
+        `;
+        container.appendChild(li);
+      });
+    }
+
+    // 出費を追加
+    function addExpense() {
+      const titleInput = document.getElementById('spend-title');
+      const amountInput = document.getElementById('spend-amount');
+      const title = titleInput.value.trim() || '使ったお金';
+      const amount = parseInt(amountInput.value, 10);
+
+      if (isNaN(amount) || amount <= 0) {
+        alert('正しい金額を入力してくださいね');
+        return;
+      }
+
+      balance -= amount;
+      const now = new Date();
+      const dateStr = `${now.getMonth() + 1}/${now.getDate()} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+
+      historyData.push({
+        type: 'spend',
+        title: title,
+        amount: amount,
+        date: dateStr
+      });
+
+      titleInput.value = '';
+      amountInput.value = '';
+      saveData();
+    }
+
+    // チャージを追加
+    function addCharge() {
+      const amountInput = document.getElementById('charge-amount');
+      const amount = parseInt(amountInput.value, 10);
+
+      if (isNaN(amount) || amount <= 0) {
+        alert('正しい金額を入力してくださいね');
+        return;
+      }
+
+      balance += amount;
+      const now = new Date();
+      const dateStr = `${now.getMonth() + 1}/${now.getDate()} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+
+      historyData.push({
+        type: 'charge',
+        title: 'チャージ',
+        amount: amount,
+        date: dateStr
+      });
+
+      amountInput.value = '';
+      saveData();
+    }
+  </script>
+</body>
+</html>
